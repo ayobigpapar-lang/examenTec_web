@@ -50,8 +50,11 @@ const obtenerSeries = async () => {
     const url = `${BASE_URL}/tv/popular?api_key=${API_KEY}&language=es-ES`;
     console.log('URL de la petición:', url);
     const respuesta = await fetch(url);
+    if (!respuesta.ok) {
+    if (respuesta.status === 401) throw new Error('401');
+    throw new Error('fetch');
+    }
     const datos = await respuesta.json();
-    return datos.results;
 };
 //PUNTO2
 //=====================================
@@ -86,6 +89,10 @@ const buscarSeries = async () => {
         const query = encodeURIComponent(texto);
         const url = `${BASE_URL}/search/tv?query=${query}&api_key=${API_KEY}&language=es-ES`;
         const respuesta = await fetch(url);
+        if (!respuesta.ok) {
+        if (respuesta.status === 401) throw new Error('401');
+        throw new Error('fetch');
+        }
         const datos = await respuesta.json();
 
         ocultarLoading();
@@ -100,7 +107,7 @@ const buscarSeries = async () => {
     }
 };
 
-// PUNTO 4: MODAL DE DETALLE
+// PUNTO5
 // ============================================================================
 const abrirModal = () => modal.classList.add('modal--show');
 const cerrarModal = () => modal.classList.remove('modal--show');
@@ -112,7 +119,13 @@ const mostrarDetalle = async (id) => {
     try {
         const url = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=es-ES`;
         const respuesta = await fetch(url);
+        if (!respuesta.ok) {
+
+            if (respuesta.status === 401) throw new Error('401');
+            throw new Error('fetch');
+        }
         const serie = await respuesta.json();
+
  
         const generos = serie.genres && serie.genres.length
             ? serie.genres.map(g => g.name).join(', ')
@@ -171,6 +184,7 @@ const iniciar = async () => {
 
         ocultarLoading();
         seriesGrid.innerHTML = series.map(crearTarjeta).join('');//cambiamos acá
+         resultsCount.textContent = `${series.length} resultados`; 
         console.log('Series renderizadas');
     } catch (error) {
         console.error('Error:', error);
