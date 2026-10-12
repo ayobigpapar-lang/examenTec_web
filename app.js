@@ -56,12 +56,12 @@ const obtenerSeries = async () => {
 //PUNTO2
 //=====================================
 const crearTarjeta=(serie)=>{
-    const {name,first_air_date,vote_average,poster_path}=serie;
+    const {id,name,first_air_date,vote_average,poster_path}=serie;
     const año =first_air_date ? first_air_date.split('-')[0] : 'N/A';
     const imagen = poster_path ? `${IMAGE_URL}${poster_path}` :'';
     const rating =vote_average ? vote_average.toFixed(1) : 'N/A';
     return `
-            <article class="serie-card">
+            <article class="serie-card" data-id="${id}">
                 <div class="serie-card__poster">
                     <img class="serie-card__image" src="${imagen}" alt="${name}">
                     <span class="serie-card__rating">${rating}</span>
@@ -99,6 +99,54 @@ const buscarSeries = async () => {
         mostrarError(mensaje);
     }
 };
+
+// PUNTO 4: MODAL DE DETALLE
+// ============================================================================
+const abrirModal = () => modal.classList.add('modal--show');
+const cerrarModal = () => modal.classList.remove('modal--show');
+ 
+const mostrarDetalle = async (id) => {
+    modalBody.innerHTML = '<p>Cargando...</p>';
+    abrirModal();
+ 
+    try {
+        const url = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=es-ES`;
+        const respuesta = await fetch(url);
+        const serie = await respuesta.json();
+ 
+        const generos = serie.genres && serie.genres.length
+            ? serie.genres.map(g => g.name).join(', ')
+            : 'N/A';
+        const año = serie.first_air_date ? serie.first_air_date.split('-')[0] : 'N/A';
+ 
+        modalBody.innerHTML = `
+            <h2 class="modal__title">${serie.name}</h2>
+            <p class="modal__subtitle">${año}</p>
+            <div class="modal__info">
+                <span><strong>Temporadas:</strong> ${serie.number_of_seasons}</span>
+                <span><strong>Episodios:</strong> ${serie.number_of_episodes}</span>
+                <span><strong>Estado:</strong> ${serie.status}</span>
+                <span><strong>Géneros:</strong> ${generos}</span>
+            </div>
+            <p class="modal__overview">${serie.overview || 'Sin sinopsis disponible.'}</p>
+        `;
+    } catch (error) {
+        console.error('Error:', error);
+        modalBody.innerHTML = `<p class="error__message">No se pudo cargar el detalle</p>`;
+    }
+};
+seriesGrid.addEventListener('click', (e) => {
+    const tarjeta = e.target.closest('.serie-card');
+    if (tarjeta) mostrarDetalle(tarjeta.dataset.id);
+});
+ 
+modalClose.addEventListener('click', cerrarModal);
+modalOverlay.addEventListener('click', cerrarModal);
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') cerrarModal();
+});
+
+
 
 searchInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') buscarSeries();
