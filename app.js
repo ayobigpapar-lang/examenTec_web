@@ -74,6 +74,44 @@ const crearTarjeta=(serie)=>{
     `;
 }
 
+// PUNTO3
+// ============================================================================
+const buscarSeries = async () => {
+    const texto = searchInput.value.trim();
+    if (texto === '') return;
+
+    mostrarLoading();
+
+    try {
+        const query = encodeURIComponent(texto);
+        const url = `${BASE_URL}/search/tv?query=${query}&api_key=${API_KEY}&language=es-ES`;
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+
+        ocultarLoading();
+        resultsTitle.textContent = `Resultados para: "${texto}"`;
+        seriesGrid.innerHTML = datos.results.map(crearTarjeta).join('');
+    } catch (error) {
+        let mensaje = 'No se pudieron cargar las series';
+        if (error.message.includes('401')) mensaje = 'API Key inválida';
+        else if (error.message.includes('fetch')) mensaje = 'Error de red';
+        else if (error.message.includes('429')) mensaje = 'Demasiadas peticiones';
+        mostrarError(mensaje);
+    }
+};
+
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') buscarSeries();
+});
+
+clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    resultsTitle.textContent = 'Series Populares';
+    iniciar();
+});
+
+
+
 
 const iniciar = async () => {
     console.log('Mostrando series...');
